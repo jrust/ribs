@@ -1,0 +1,126 @@
+RIBS (Rsync Incremental Backup System) by Jason Rust <jrust@rustyparts.com>
+You can find the latest version of this script over at:
+http://www.ribs-backup.org/
+
+Description:
+RIBS is an incremental backup system written in PHP which utilizes some
+common *nix programs (specifically rsync, ssh and cp).  Incremental
+backups mean frequent backups can be done (i.e. hourly) with only around
+2x the space of the full backup.  Using rsync means that RIBS can act as
+both a backup script on a local machine, or as a script to backup
+several network hosts.  It is designed to be highly configurable and
+highly informative to the system administrator.  There is a high amount
+of error checking, and logging/email capabilities.
+
+Requirements:
+* rsync - http://samba.anu.edu.au/rsync/
+* cp & rm - http://www.gnu.org/software/fileutils/fileutils.html
+* PHP - http://www.php.net/
+* basic PEAR libraries (as of version 1.1) - http://pear.php.net/
+* PEAR's Console_Getopt-1.0 package.  This comes with PEAR, 
+  but many people have version 0.11 which won't work.  Get it at:
+  http://pear.php.net/package-info.php?pacid=67
+
+Quick Usage Explanation:
+For those in a hurry or just wanting to test out the script, the below
+commands should get you up and going:
+* Download the latest version of RIBS
+* tar -xzvf ribs-x.x.tar.gz
+* cd ribs-x.x
+* ./ribs.php example hourly
+
+After that the test example backup should be run using the test directory
+that comes with RIBS.  From there you can customize the options and start
+running backups on real data.
+
+Detailed Usage Explanation:
+Install rsync.  Set it up to run over ssh (you will need to install ssh
+keys on the servers you will be backing up (man ssh-keygen).  If you set
+this up right you should be able to ssh from the backup machine to the
+remote host as the backup user without it asking you for a password
+Next, go through the user settings of this script to set up the hosts
+you want to backup and the different configuration options (such as
+email and logging settings).  Last you need to set the script up to run
+in crontab for your different hosts.
+
+An example crontab entry might look something like the following:
+0 0-23/3 * * * /usr/local/bin/ribs my_host hourly # run my_host every three hours
+59 1 * * * /usr/local/bin/ribs my_host,big_host daily # run these two hosts daily
+58 1 * * 0 /usr/local/bin/ribs small_host weekly # run small_host once a week
+57 1 1 * * /usr/local/bin/ribs ALL monthly # use the keyword ALL to run all hosts monthly
+
+Notice that we schedule the daily, weekly, and monthly to occur at a
+different hour than the hourly ones.
+
+You can run this script from the command line and may want to do so a
+few times before installing it in crontab to make sure you have worked
+out the kinks.  Also it is important to schedule the cron jobs such that
+they will not overlap with each other.  In other words, if the daily
+backup runs at the same time as the hourly backup you will have
+problems.  Generally, scheduling the backups 15 minutes apart will work.
+
+Exclude Patterns:
+Much of the following explanation of exclude patterns comes from the
+rsync man page.  The patterns can take several forms. The rules are:
+
+* If the  pattern  starts with a / then it is matched against the start of the
+  filename, otherwise it is matched against the end of the filename.  Thus
+  "/foo"  would  match  a file  called  "foo"  at the base of the tree.  On the
+  other hand, "foo" would match any file called "foo" anywhere in the tree
+  because the  algorithm  is  applied  recursively from top down; it behaves as
+  if each path component gets a turn at being the end of the file name.
+
+* If the pattern ends with a / then it will only match a directory, not a file,
+  link or device.
+
+* If the pattern contains a wildcard character from the set *?[ then expression
+  matching is applied using the shell filename matching rules. Otherwise a simple
+  string match  is used.
+
+* If the  pattern includes a double asterisk "**" then all wildcards in the
+  pattern will match slashes, otherwise they will stop at slashes.
+
+* If the pattern begins with a + then the file will be included.  However, the
+  include rule must come before the exclude rule in order to override it.
+
+* Examples:
+   'directories' => '/etc/rc.d'
+   'excludes' => '/init.d' // exclude the top level init.d directory in rd.d/
+   'excludes' => '*.sh' // exclude all shell files 
+   'excludes' => '+foo.sh *.sh rc*.d/'  // exclude all shell files, except foo.sh, and all rcX.d directories
+
+Backup Types:
+The default backup type is incremental using hard links.  This means
+that every directory will look like a full backup, but it will only take
+the space of the backup plus the changed files.  However, for backups 
+with lots of files (>1000) this can become slow.  Thus, the other option 
+is to use set the 'use_hard_links' option to false for the backup
+configuration.  This will keep a full backup in the most recent
+directory, but only archive changed files in the other directories.
+So, roughly the same amount of space will be used, but not every
+directory will look like a full backup, and it will be faster for
+backups with lots of files. 
+
+Extracting Incremental Backups From a hard linked backup:
+If an hourly backup is done and you would like to extract all changed files
+from that backup the following command will achieve that:
+find /backups/backup_name/hourly.0 -type f -links 1 | sed 's, ,\\,g' | xargs tar -czf /tmp/foo.tar.gz
+
+Note on ssh and port forwarding:
+If port forwarding with ssh means nothing to you, then you can ignore below.
+
+When connecting to the same 'host' twice, but the second connection is to a port
+forward to another host (i.e. behind a firewall), StrictHostKeyChecking (in the
+ssh config file on the host running ribs) will need to be disabled because the
+host key of the first port will conflict with the host key of the second port.
+
+An example: Machine A is x.x.x.x Machine B is y.y.y.y  Machine A has ssh
+running on port 22.  Machine B also has ssh listening on port 22, but Machine B
+is not accessible from the outside.  So a port forward is setup on Machine A to
+get traffic to Machine B (e.g x.x.x.x:999 -> y.y.y.y:22)
+
+Credits:
+Thanks to Mike Rubel for his excellent paper and sample code...
+http://www.mikerubel.org/computers/rsync_snapshots/
+Thanks to Greg Lawler (http://zinkwazi.com) for the first BASH version
+Thanks to Shai (http://shaibn.com/) for maintaining ribs-backup.org

@@ -1,0 +1,414 @@
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+May 27, 2004, 12:03 pm: weekly backups for example
+
+-= Beginning backups for example
+
+Performed weekly backup by copying the last daily up to weekly
+
+Additional information:
+total 12
+lrwxrwxrwx    1 jrust    jrust          49 May 27 12:01 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:02 daily.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:02 hourly.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:03 weekly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  323M  139M  70% /
+/dev/hda1             198M   16M  172M   9% /boot
+/dev/hda8              29G   26G  2.2G  93% /home
+none                  506M     0  506M   0% /dev/shm
+/dev/hda6             487M  9.0M  453M   2% /tmp
+/dev/hda2             4.9G  4.2G  385M  92% /usr
+/dev/hda3             981M  668M  264M  72% /var
+//retal/jrust$         31G   29G  2.6G  92% /mnt/smb/p
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+May 27, 2004, 12:03 pm: hourly backups for example
+
+-= Beginning backups for example
+
+building file list ... done
+test dir/
+test dir/README
+rsync[1952] (server receiver) heap statistics:
+  arena:         122880   (bytes from sbrk)
+  ordblks:            5   (chunks not in use)
+  smblks:             2
+  hblks:              0   (chunks from mmap)
+  hblkhd:             0   (bytes from mmap)
+  usmblks:            0
+  fsmblks:           80
+  uordblks:      108792   (bytes used)
+  fordblks:       14088   (bytes free)
+  keepcost:        1000   (bytes in releasable chunk)
+rsync[1950] (sender) heap statistics:
+  arena:         344064   (bytes from sbrk)
+  ordblks:            4   (chunks not in use)
+  smblks:             3
+  hblks:              0   (chunks from mmap)
+  hblkhd:             0   (bytes from mmap)
+  usmblks:            0
+  fsmblks:          152
+  uordblks:      328064   (bytes used)
+  fordblks:       16000   (bytes free)
+  keepcost:        3696   (bytes in releasable chunk)
+
+Number of files: 7
+Number of files transferred: 1
+Total file size: 131 bytes
+Total transferred file size: 67 bytes
+Literal data: 67 bytes
+Matched data: 0 bytes
+File list size: 164
+Total bytes written: 275
+Total bytes read: 36
+
+wrote 275 bytes  read 36 bytes  622.00 bytes/sec
+total size is 131  speedup is 0.42
+
+Additional information:
+total 12
+lrwxrwxrwx    1 jrust    jrust          49 May 27 12:01 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:02 daily.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:03 hourly.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:03 weekly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  323M  139M  70% /
+/dev/hda1             198M   16M  172M   9% /boot
+/dev/hda8              29G   26G  2.2G  93% /home
+none                  506M     0  506M   0% /dev/shm
+/dev/hda6             487M  9.0M  453M   2% /tmp
+/dev/hda2             4.9G  4.2G  385M  92% /usr
+/dev/hda3             981M  668M  264M  72% /var
+//retal/jrust$         31G   29G  2.6G  92% /mnt/smb/p
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+May 27, 2004, 12:03 pm: daily backups for example
+
+-= Beginning backups for example
+
+Performed daily backup by copying the last hourly up to daily
+
+Additional information:
+total 12
+lrwxrwxrwx    1 jrust    jrust          49 May 27 12:01 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwx---    4 jrust    jrust        4096 May 27 12:03 daily.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:03 hourly.0
+drwxrwx---    3 jrust    jrust        4096 May 27 12:03 weekly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  323M  139M  70% /
+/dev/hda1             198M   16M  172M   9% /boot
+/dev/hda8              29G   26G  2.2G  93% /home
+none                  506M     0  506M   0% /dev/shm
+/dev/hda6             487M  9.0M  453M   2% /tmp
+/dev/hda2             4.9G  4.2G  385M  92% /usr
+/dev/hda3             981M  668M  264M  72% /var
+//retal/jrust$         31G   29G  2.6G  92% /mnt/smb/p
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:29 pm: hourly backups for example
+Created destination directory: /home/jrust/testing/ribs/backups/
+
+-= Beginning backups for example
+
+Created directory for example: /home/jrust/testing/ribs/backups/example/
+building file list ... done
+created directory /home/jrust/testing/ribs/backups/example/hourly.0
+foo/
+foo/test
+test dir/
+test dir/README
+test dir/docs/
+test dir/docs/mp3/
+test dir/docs/stuff.txt
+test dir/include.mp3
+test dir/junk
+
+Number of files: 9
+Number of files transferred: 5
+Total file size: 130 bytes
+Total transferred file size: 130 bytes
+Literal data: 130 bytes
+Matched data: 0 bytes
+File list size: 197
+Total bytes written: 534
+Total bytes read: 120
+
+wrote 534 bytes  read 120 bytes  1308.00 bytes/sec
+total size is 130  speedup is 0.20
+
+Additional information:
+total 4
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:29 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  4 jrust jrust 4096 Nov 24 12:29 hourly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:31 pm: hourly backups for example
+Created destination directory: /home/jrust/testing/ribs/backups/
+
+-= Beginning backups for example
+
+Created directory for example: /home/jrust/testing/ribs/backups/example/
+building file list ... done
+created directory /home/jrust/testing/ribs/backups/example/hourly.0
+foo/
+foo/test
+test dir/
+test dir/README
+test dir/docs/
+test dir/docs/mp3/
+test dir/docs/stuff.txt
+test dir/include.mp3
+test dir/junk
+
+Number of files: 9
+Number of files transferred: 5
+Total file size: 130 bytes
+Total transferred file size: 130 bytes
+Literal data: 130 bytes
+Matched data: 0 bytes
+File list size: 197
+Total bytes written: 534
+Total bytes read: 120
+
+wrote 534 bytes  read 120 bytes  436.00 bytes/sec
+total size is 130  speedup is 0.20
+
+Post command: if tar czv -C /home/jrust/testing/ribs/backups/example/hourly.1 -f backup.tar.gz .; then rm -rf /home/jrust/testing/ribs/backups/example/hourly.1; mkdir /home/jrust/testing/ribs/backups/example/hourly.1; mv backup.tar.gz /home/jrust/testing/ribs/backups/example/hourly.1/; fi
+tar: /home/jrust/testing/ribs/backups/example/hourly.1: Cannot chdir: No such file or directory
+tar: Error is not recoverable: exiting now
+
+Additional information:
+total 4
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:31 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  4 jrust jrust 4096 Nov 24 12:31 hourly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:31 pm: hourly backups for example
+
+-= Beginning backups for example
+
+building file list ... done
+
+Number of files: 9
+Number of files transferred: 0
+Total file size: 130 bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 197
+Total bytes written: 209
+Total bytes read: 20
+
+wrote 209 bytes  read 20 bytes  458.00 bytes/sec
+total size is 130  speedup is 0.57
+
+Post command: if tar czv -C /home/jrust/testing/ribs/backups/example/hourly.1 -f backup.tar.gz .; then rm -rf /home/jrust/testing/ribs/backups/example/hourly.1; mkdir /home/jrust/testing/ribs/backups/example/hourly.1; mv backup.tar.gz /home/jrust/testing/ribs/backups/example/hourly.1/; fi
+tar: /home/jrust/testing/ribs/backups/example/hourly.1: Cannot chdir: No such file or directory
+tar: Error is not recoverable: exiting now
+
+Additional information:
+total 4
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:31 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  4 jrust jrust 4096 Nov 24 12:31 hourly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:31 pm: hourly backups for example
+
+-= Beginning backups for example
+
+building file list ... done
+
+Number of files: 9
+Number of files transferred: 0
+Total file size: 130 bytes
+Total transferred file size: 0 bytes
+Literal data: 0 bytes
+Matched data: 0 bytes
+File list size: 197
+Total bytes written: 209
+Total bytes read: 20
+
+wrote 209 bytes  read 20 bytes  458.00 bytes/sec
+total size is 130  speedup is 0.57
+
+Post command: if tar czv -C /home/jrust/testing/ribs/backups/example/hourly.1 -f backup.tar.gz .; then rm -rf /home/jrust/testing/ribs/backups/example/hourly.1; mkdir /home/jrust/testing/ribs/backups/example/hourly.1; mv backup.tar.gz /home/jrust/testing/ribs/backups/example/hourly.1/; fi
+./
+
+Additional information:
+total 8
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:31 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  4 jrust jrust 4096 Nov 24 12:31 hourly.0
+drwxrwxr-x  2 jrust jrust 4096 Nov 24 12:31 hourly.1
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:32 pm: hourly backups for example
+
+-= Beginning backups for example
+
+building file list ... done
+foo/
+foo/test
+
+Number of files: 9
+Number of files transferred: 1
+Total file size: 135 bytes
+Total transferred file size: 5 bytes
+Literal data: 5 bytes
+Matched data: 0 bytes
+File list size: 197
+Total bytes written: 255
+Total bytes read: 40
+
+wrote 255 bytes  read 40 bytes  196.67 bytes/sec
+total size is 135  speedup is 0.46
+
+Post command: if tar czv -C /home/jrust/testing/ribs/backups/example/hourly.1 -f backup.tar.gz .; then rm -rf /home/jrust/testing/ribs/backups/example/hourly.1; mkdir /home/jrust/testing/ribs/backups/example/hourly.1; mv backup.tar.gz /home/jrust/testing/ribs/backups/example/hourly.1/; fi
+./
+./foo/
+./foo/test
+
+Additional information:
+total 12
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:31 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  4 jrust jrust 4096 Nov 24 12:32 hourly.0
+drwxrwxr-x  2 jrust jrust 4096 Nov 24 12:32 hourly.1
+drwxrwxr-x  2 jrust jrust 4096 Nov 24 12:31 hourly.2
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:37 pm: hourly backups for example
+Created destination directory: /home/jrust/testing/ribs/backups/
+
+-= Beginning backups for example
+
+Created directory for example: /home/jrust/testing/ribs/backups/example/
+building file list ... done
+created directory /home/jrust/testing/ribs/backups/example/hourly.0
+test dir/
+test dir/README
+test dir/docs/
+test dir/docs/mp3/
+test dir/docs/stuff.txt
+test dir/include.mp3
+test dir/junk
+
+Number of files: 7
+Number of files transferred: 4
+Total file size: 130 bytes
+Total transferred file size: 130 bytes
+Literal data: 130 bytes
+Matched data: 0 bytes
+File list size: 164
+Total bytes written: 464
+Total bytes read: 100
+
+wrote 464 bytes  read 100 bytes  1128.00 bytes/sec
+total size is 130  speedup is 0.23
+
+Post command: if [ -d /home/jrust/testing/ribs/backups/example/hourly.1 ]; then tar czv -C /home/jrust/testing/ribs/backups/example/hourly.1 -f backup.tar.gz .; rm -rf /home/jrust/testing/ribs/backups/example/hourly.1; mkdir /home/jrust/testing/ribs/backups/example/hourly.1; mv backup.tar.gz /home/jrust/testing/ribs/backups/example/hourly.1/; fi
+
+Additional information:
+total 4
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:37 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  3 jrust jrust 4096 Nov 24 12:37 hourly.0
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+//retal/it             34G   18G   17G  52% /mnt/smb/s
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+November 24, 2004, 12:37 pm: hourly backups for example
+
+-= Beginning backups for example
+
+building file list ... done
+test dir/
+test dir/README
+
+Number of files: 7
+Number of files transferred: 1
+Total file size: 135 bytes
+Total transferred file size: 71 bytes
+Literal data: 71 bytes
+Matched data: 0 bytes
+File list size: 164
+Total bytes written: 283
+Total bytes read: 40
+
+wrote 283 bytes  read 40 bytes  646.00 bytes/sec
+total size is 135  speedup is 0.42
+
+Post command: if [ -d /home/jrust/testing/ribs/backups/example/hourly.1 ]; then tar czv -C /home/jrust/testing/ribs/backups/example/hourly.1 -f backup.tar.gz .; rm -rf /home/jrust/testing/ribs/backups/example/hourly.1; mkdir /home/jrust/testing/ribs/backups/example/hourly.1; mv backup.tar.gz /home/jrust/testing/ribs/backups/example/hourly.1/; fi
+./
+./test dir/
+./test dir/README
+
+Additional information:
+total 8
+lrwxrwxrwx  1 jrust jrust   49 Nov 24 12:37 current -> /home/jrust/testing/ribs/backups/example/hourly.0
+drwxrwxr-x  3 jrust jrust 4096 Nov 24 12:37 hourly.0
+drwxrwxr-x  2 jrust jrust 4096 Nov 24 12:37 hourly.1
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda7             487M  328M  134M  72% /
+/dev/hda1             198M  9.7M  178M   6% /boot
+none                  506M     0  506M   0% /dev/shm
+/dev/hda8              29G   24G  4.2G  85% /home
+/dev/hda6             487M  9.8M  452M   3% /tmp
+/dev/hda2             4.9G  3.9G  743M  85% /usr
+/dev/hda3             981M  659M  273M  71% /var
+//retal/it             34G   18G   17G  52% /mnt/smb/s
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

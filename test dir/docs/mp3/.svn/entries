@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1092"
+   name=""
+   committed-date="2004-03-12T18:13:32.741088Z"
+   url="svn://www.codejanitor.com/home/cjsvn/trunk/ribs/test%20dir/docs/mp3"
+   last-author="jrust"
+   kind="dir"
+   uuid="050cec29-0bbb-0310-b500-ffd5b9db3264"
+   revision="1622"/>
+<entry
+   committed-rev="1092"
+   name="booroo.mp3"
+   text-time="2004-03-12T17:24:10.000000Z"
+   committed-date="2004-03-12T18:13:32.741088Z"
+   checksum="fd1e17db6a053bedcc5e502c270d4593"
+   last-author="jrust"
+   kind="file"
+   prop-time="2004-02-16T22:51:23.000000Z"/>
+</wc-entries>

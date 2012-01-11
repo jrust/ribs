@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1093"
+   name=""
+   committed-date="2004-03-12T18:23:51.732701Z"
+   url="svn://www.codejanitor.com/home/cjsvn/trunk/ribs/test%20dir/my%20mp3"
+   last-author="jrust"
+   kind="dir"
+   uuid="050cec29-0bbb-0310-b500-ffd5b9db3264"
+   revision="1622"/>
+<entry
+   committed-rev="1093"
+   name="test.mp3"
+   text-time="2004-03-12T18:01:19.000000Z"
+   committed-date="2004-03-12T18:23:51.732701Z"
+   checksum="7360f7768fc3bd706bda030862a65514"
+   last-author="jrust"
+   kind="file"
+   prop-time="2004-02-16T22:51:22.000000Z"/>
+</wc-entries>

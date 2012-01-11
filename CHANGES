@@ -1,0 +1,57 @@
+2.3
+===
+* The example tar script now does not throw an error the first time the script runs.
+* Now works correctly when only backing directories up once a day (limit => 1).
+* Backup directories and exclude directories can now contain spaces.
+
+2.2
+===
+* A per-host shell command can now be run for both a successful and
+  unsuccessful backup (Nathan).
+* A different style of incremental backups is now available for each
+  the hard link method is not used and only changed files are put into
+  the backup directories.  Useful for backup setups with lots of files
+  (Nathan).
+* The ssh port is now configurable (Phil Schultz <phil@alcsoftware.com>)
+* Include patterns are now supported (Dan Allen <dan@mojavelinux.com>)
+* If ribs is backing up its host machine as the current user ssh is not used
+  and no password is needed (Dan Allen <dan@mojavelinux.com>)
+
+2.1
+===
+* Added example test configuration and directory for easy testing of RIBS.
+* Made default config options more sensible.
+* Fixed bug where logfile wasn't created if it wasn't already present.
+* Code cleanup.
+* Moved reinit to its own function and made it possible to reinit 
+  configurations that aren't turned on (Phil Schultz phil@alcsoftware.com).
+* Backups will try and finish all specified backups even if an error
+  is hit during one of them (Phil Schultz phil@alcsoftware.com).
+
+2.0.1
+=====
+* Fixed Console_Getopt bugs.  Must be using version 1.0 of that library now.
+* Cleaned up the README
+
+2.0
+===
+* Added --test option which performs a dry run.
+* Added --reinit option which reinitializes the backup from scratch.
+* Added --debug option which outputs debug information.
+* Improved error handling so that hitting CTRL-C during execution
+  shouldn't cause program to hang.
+* Fixed bug where multiple excludes weren't working (Thanks to Brian
+  Johnson blj AT thermoanalytics DOT com).
+* Added examples in the README on how to use the excludes feature
+* Added example in the README on how to extract an incremental backup.
+* Code cleanup.
+
+1.1
+===
+* Now using PEAR's Getopt utility to make the obtaining of command line
+  args work with different versions of PHP
+* Fixed up some the documentation to be more accurate.
+
+1.0
+===
+* Initial release

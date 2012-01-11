@@ -1,0 +1,871 @@
+#!/usr/bin/php -q
+<?php
+/** $Id: ribs 1625 2004-11-24 20:55:48Z jrust $ */
+// {{{ version
+
+define('RIBS_VERSION', '2.3');
+
+// }}}
+// {{{ description
+
+/**
+ * RIBS (Rsync Incremental Backup System) by Jason Rust <jrust@rustyaprts.com>
+ * Copyright (c) 2002-2003 Jason Rust <jrust@rustyparts.com>
+ * The latest version of this program can be found at 
+ * http://rustyparts.com/scripts.php
+ *
+ * License: 
+ *
+ * This source file is subject to the GNU Public License (GPL),
+ * that is bundled with this package in the file LICENSE, and is
+ * available at through the world-wide-web at
+ * http://www.fsf.org/copyleft/lesser.html
+ * If you did not receive a copy of the LGPL and are unable to
+ * obtain it through the world-wide-web, you can get it by writing the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+ * MA 02111-1307, USA.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * See http://www.gnu.org/copyleft/gpl.html for a copy of the license.  
+ *
+ * Description:
+ *
+ * RIBS is an incremental backup system written in PHP which utilizes
+ * some common *nix programs (specifically rsync, ssh and cp).
+ *
+ * Requirements:
+ *
+ * rsync - http://samba.anu.edu.au/rsync/
+ * cp & rm - http://www.gnu.org/software/fileutils/fileutils.html
+ * PHP - http://www.php.net/
+ * basic PEAR libraries (as of version 1.1) - http://pear.php.net/
+ *
+ * Use:
+ *
+ * See the README that comes with this package.
+ */
+
+// }}}
+// {{{ user settings
+
+/****** Configuration Section ******/
+
+/**
+ * This is the place on the server where the backups will end up WITH trailing slash
+ * @type string
+ */
+$s_destinationDir = dirname(__FILE__) . '/backups/';
+
+/** 
+ * An array of the different servers to back up, and what directories on them to back up
+ * The structure is as follows:
+ * 'backup_name' => array(
+ *      'enabled'       => 'this config enabled? true or false',
+ *      'ip'            => 'server ip address/FQDN',
+ *      'ssh_user'      => 'the ssh user to use for rsync',
+ *      'ssh_port'      => 'the ssh port (optional, defaults to 22)',
+ *      'directories'   => 'backup directories separated by a space WITHOUT a trailing slash (i.e. /home /root)',
+ *                          If a directory has a space in it, escape it with a \
+ *      'excludes'      => 'the directories to exclude separated by a space.  
+ *                          See the README for more information on exclude patterns.'
+ *      'limits'        => 'an array of directory limits that will allow you to override the limits you set in
+ *                          $a_backupTypeSettings.  Completely optional. e.g. array('hourly' => 2) if you back up
+ *                          hourly twice a day.'
+ *      'use_hard_links'=> 'Whether to do incremental backups using hard links or real files.  
+ *                          Default option is true.  See "Backup Types" in the README for more info.'
+ *      'post_command'  => 'A shell command to run after a successful backup.  Replaces %fullPath% 
+ *                          and %backupType% with the real values.'
+ *      'post_error_command' => 'Same as post_command, but run when an error occurs.'
+ *  ),
+ * @type array
+ */
+$a_backupHosts = array(
+    'my_host' => array(
+        'enabled'       => false,
+        'ip'            => 'my_host.example.com',
+        'ssh_user'      => 'backup',
+        'directories'   => '/etc /var/lib/mysql /home',
+        'excludes'      => '',
+        'limits'        => array('hourly' => 24), // because this is backed up every hour
+    ),
+    'small_host' => array(
+        'enabled'       => false,
+        'ip'            => 'small_host.example.com',
+        'ssh_user'      => 'backup',
+        'ssh_port'      => '9999',
+        'directories'   => '/etc',
+        'excludes'      => '',
+    ),
+    'big_host' => array(
+        'enabled'       => false,
+        'ip'            => '10.52.1.1',
+        'ssh_user'      => 'root',
+        'directories'   => '/var',
+        'excludes'      => 'mp3/', // exclude any mp3 directories
+    ),
+    // A test example configuration that can be used with the test
+    // directory that comes with RIBS.
+    'example' => array(
+        'enabled'       => true,
+        'ip'            => 'localhost',
+        'ssh_user'      => get_current_user(),
+        'directories'   => dirname(__FILE__) . '/test\ dir',
+        'use_hard_links'=> true, 
+        // An example of a post_command which will tar up each backup.
+        // NOTE: this is only useful if use_hard_links is false
+        // 'post_command'  => 'if [ -d %fullPath%%backupType%.1 ]; then tar czv -C %fullPath%%backupType%.1 -f backup.tar.gz .; rm -rf %fullPath%%backupType%.1; mkdir %fullPath%%backupType%.1; mv backup.tar.gz %fullPath%%backupType%.1/; fi',
+        'excludes'      => '/test\ dir/my\ mp3 +/test\ dir/include.mp3 *.mp3 *.svn/ junk/', 
+                           // exclude the root mp3 directory,
+                           // any mp3 files anywhere else (except for include.mp3),
+                           // and any .svn/ and junk/ directories
+    ),
+);
+
+/**
+ * Some settings for the four different backup types.  For each type you must specify
+ * 'limit' => of directories to keep.  So, if you run every two hours, make hourly 12, 
+ * if every hour then 24, etc.  Try to span the entire day.  The below setting runs 8 
+ * times a day (every three hours), keeps 7 days, 4 weeks, and 12 months of backups.
+ * 'email' => whether to send email or not after completion
+ * 'log' => whether to log after completion
+ * @type array
+ */
+$a_backupTypeSettings = array(
+    'hourly'    => array('limit' => 8, 'email' => true, 'log' => true),
+    'daily'     => array('limit' => 7, 'email' => true, 'log' => true),
+    'weekly'    => array('limit' => 4, 'email' => true, 'log' => true),
+    'monthly'   => array('limit' => 12, 'email' => true, 'log' => true),
+);
+
+/**
+ * The email address to send reports to (you can comma separate multiple addresses)
+ * @type string
+ */
+$s_email = '';
+
+/**
+ * The log file.
+ * @type string
+ */
+$s_logFile = dirname(__FILE__) . '/ribs.log';
+
+/**
+ * When to start the log over.  Note, this does not mean we rotate the log
+ * it is just to keep the log file from getting too big.  Can be hourly, daily,
+ * weekly, or monthly
+ * @type string
+ */
+$s_restartBackupLog = 'weekly';
+
+/**
+ * When to do an actual rsync.  Otherwise, we just copy the oldest directory 
+ * of the type below to the current type.  Example: if doing a monthly backup
+ * and $s_rsyncType is not 'monthly' then the oldest weekly directory will be
+ * copied to monthly.0.  This keeps down the amount of disk space needed.  Usually you
+ * will want this to be 'hourly'
+ * @type string
+ */
+$s_rsyncType = 'hourly';
+
+/**
+ * Always email if there's an error?  This overrides the specific backup setting
+ * to ensure you will get an email if there is a problem.
+ * @type bool
+ */
+$b_emailOnError = true;
+
+/**
+ * Die quietly?  If so, then on error we just shut up, email (see above), and quit,
+ * otherwise we throw the error.
+ * @type bool
+ */
+$b_silentOnError = false;
+
+/**
+ * Default permissions for when we have to create a new directory
+ * @type int
+ */
+$s_defaultDirPerms = 0750;
+
+/**
+ * Additional comands to be run at the end of each backup (useful for giving
+ * additional info about file sizes, directories, etc.).  Leave empty for nothing.
+ * %fullPath% is a placeholder that will be filled in with the full path to the current backup. 
+ * @type string
+ */
+$s_extraCommands = "ls -l %fullPath%; df -h";
+
+/**
+ * The extra rsync commands to use 
+ * @type string
+ */
+$s_rsyncArgs = '-arztplv --delete --delete-excluded --stats --timeout=180';
+
+/**
+ * The path to the rsync command
+ * @type string
+ */
+$s_rsync = '/usr/bin/rsync'; 
+
+/**
+ * The path to rm 
+ * @var string
+ */
+$s_rm = '/bin/rm';
+
+/**
+ * The path to cp 
+ * @type string
+ */
+$s_cp = '/bin/cp';
+
+/****** End Config. No need to edit anything else! ******/
+
+// }}}
+// {{{ readline()
+
+/**
+ * Reads a line from standard input.  Have to put it up here so php loads it in.
+ *
+ * @access public
+ * @return string The string from input
+ */
+if (!function_exists('readline')) {
+    function readline () {
+        $fp = fopen('php://stdin', 'r');
+        $in = fgets($fp, 4094); // Maximum windows buffer size
+        fclose ($fp);
+        return $in;
+    }
+}
+
+// }}}
+// {{{ requires
+
+require_once 'Console/Getopt.php';
+
+// }}}
+// {{{ grab command line vars
+
+// don't run out of time
+set_time_limit(0);
+
+// we want all errors
+error_reporting(E_ALL);
+
+$args = Console_Getopt::readPHPArgv();
+if (PEAR::isError($args)) {
+    die('Fatal Error: ' . $args->getMessage() . "\n");
+}
+
+$options = Console_Getopt::getopt($args, 'dhtr', array('debug', 'help', 'test', 'reinit'));
+if (PEAR::isError($options)) {
+    die($options->getMessage() . "\n");
+}
+
+$b_debug = false;
+$b_dryRun = false;
+$b_cleanupDryRun = false;
+$b_reinit = false;
+$s_log = '';
+$b_error = false;
+
+foreach ($options[0] as $option) {
+    switch ($option[0]) {
+        case 'h':
+        case '--help':
+            showUsage($args[0]);
+            exit;
+            break;
+        case 'd':
+        case '--debug':
+            $b_debug = true;
+            break;
+        case 't':
+        case '--test':
+            $b_dryRun = true;
+            break;
+        case 'r':
+        case '--reinit':
+            $b_reinit = true;
+            break;
+    }
+}
+
+if (empty($options[1][0])) {
+    writeln('Error: Configuation not specified' . "\n");
+    showUsage($args[0]);
+    exit;
+}
+
+// grab the config names from the command line
+$a_configNames = explode(',', $options[1][0]);
+
+// ALL is a special keyword to run all backups
+if ($a_configNames[0] == 'ALL') {
+    $a_configNames = array_keys($a_backupHosts);
+}
+
+if ($b_reinit) {
+	reInitBackups();
+	exit;
+}
+
+if (empty($options[1][1])) {
+    writeln('Error: Backup type not specified' . "\n");
+    showUsage($args[0]);
+    exit;
+}
+
+// grab the backup type from the command line
+$s_backupType = $options[1][1];
+
+if ($b_debug) {
+    array_shift($args);
+    writeln('Debug mode is ON.');
+    writeln('Arguments received: ' . implode(' ', $args));
+    writeln('Configuration names: ' . implode(',', $a_configNames));
+    writeln('Backup type: ' . $s_backupType);
+}
+
+if ($b_dryRun) {
+    writeln('Dry run mode is ON.');
+}
+
+// }}}
+// {{{ set up vars and dirs
+
+// start log
+$s_log .= date('F j, Y, g:i a') . ": $s_backupType backups for " . implode(',', $a_configNames) . "\n";
+
+// make sure it's a valid type
+if ($s_backupType != 'hourly' &&
+    $s_backupType != 'daily' &&
+    $s_backupType != 'weekly' &&
+    $s_backupType != 'monthly') {
+    writeln("ERROR: The backup type: '$s_backupType' is not valid (valid types are hourly, daily, weekly, and monthly).");
+    exit;
+}
+
+// check binaries 
+if (!is_executable($s_rsync)) {
+    writeln("WARNING: The rsync program: '$s_rsync' is not valid.");
+    exit;
+}
+
+if (!is_executable($s_rm)) {
+    writeln("WARNING: The rm program: '$s_rm' is not valid.");
+    exit;
+}
+
+if (!is_executable($s_cp)) {
+    writeln("WARNING: The cp program: '$s_cp' is not valid.");
+    exit;
+}
+
+if (!is_dir($s_destinationDir)) {
+    mkdir($s_destinationDir, $s_defaultDirPerms);
+    $s_log .= writeln("Created destination directory: $s_destinationDir", true);
+}
+
+// determine the type below the current type
+if ($s_backupType == 'daily') {
+    $s_typeBelow = 'hourly';
+}
+elseif ($s_backupType == 'weekly') {
+    $s_typeBelow = 'daily';
+}
+elseif ($s_backupType == 'monthly') {
+    $s_typeBelow = 'weekly';
+}
+else {
+    $s_typeBelow = 'monthly';
+}
+
+// }}}
+// {{{ loop through backup configurations
+
+foreach ($a_configNames as $s_configName) {
+    // make sure that we are using a valid configuration
+    if (!isset($a_backupHosts[$s_configName])) {
+        $tmp_msg = writeln("WARNING: The configuation: '$s_configName' is not valid.\n", true, true);
+        $s_log .= $tmp_msg;
+        $b_error = true;
+        continue;
+    }
+    else {
+        $s_log .= writeln("-= Beginning backups for $s_configName\n", true, true);
+    }
+
+    // make sure it's enabled
+    if (!$a_backupHosts[$s_configName]['enabled']) {
+        $s_log .= writeln("$s_configName is disabled.  Skipping backup.", true);
+        continue;
+    }
+
+    $s_fullPath = $s_destinationDir . $s_configName . '/';
+
+    if (!is_dir($s_fullPath)) {
+        mkdir($s_fullPath, $s_defaultDirPerms);
+        $s_log .= writeln("Created directory for $s_configName: $s_fullPath", true);
+    }
+
+    // {{{ rotate the current list of backups if we can 
+
+    if ($tmp_handle = opendir($s_fullPath)) {
+        $a_dirList = array();
+        $a_dirListTypeBelow = array();
+        while (false !== ($tmp_file = readdir($tmp_handle))) { 
+            if (is_dir($s_fullPath . $tmp_file)) {
+                if (preg_match(":$s_backupType\.\d+$:", $tmp_file)) {
+                    $a_dirList[] = $tmp_file;
+                }
+
+                // for later we need the directories of the type below
+                if (preg_match(":$s_typeBelow\.\d+$:", $tmp_file)) {
+                    $a_dirListTypeBelow[] = $tmp_file;
+                }
+            }
+        }
+
+        closedir($tmp_handle);
+
+        // determine maximum number of directories allowed for this backup
+        if (isset($a_backupHosts[$s_configName]['limits']) &&
+            isset($a_backupHosts[$s_configName]['limits'][$s_backupType])) {
+            $tmp_max = $a_backupHosts[$s_configName]['limits'][$s_backupType];
+        }
+        else {
+            $tmp_max = $a_backupTypeSettings[$s_backupType]['limit'];
+        }
+
+        // If the max is 1 (backing up only once a day) then don't rotate anything
+        if ($tmp_max > 1) {
+            // go through directories in reverse order and rotate them
+            natsort($a_dirList);
+            $a_dirList = array_reverse($a_dirList);
+            foreach ($a_dirList as $tmp_dir) {
+                $tmp_key = preg_replace(':.*\.(\d+)$:', '\\1', $tmp_dir);
+                // rotate off any of the old backups
+                if (($tmp_key + 1) >= $tmp_max) {
+                    if ($b_debug || $b_dryRun) {
+                        $tmp_msg = 'Rotating off old backup: ' . $s_fullPath . $tmp_dir;
+                        if ($b_dryRun) {
+                            $tmp_msg = str_replace('Rotating', 'Would rotate', $tmp_msg);
+                        }
+
+                        writeln($tmp_msg);
+                    }
+
+                    if (!$b_dryRun) {
+                        // :NOTE: can use System::rm when it supports symlinks in directories
+                        exec("$s_rm -rf $s_fullPath$tmp_dir");
+                    }
+                }
+                // otherwise rotate the directory up
+                else {
+                    $tmp_key++;
+                    $tmp_newDir = preg_replace(':\.\d+$:', ".$tmp_key", $tmp_dir);
+                    if ($b_debug || $b_dryRun) {
+                        $tmp_msg = "Rotating backup directory from $s_fullPath$tmp_dir to $s_fullPath$tmp_newDir";
+                        if ($b_dryRun) {
+                            $tmp_msg = str_replace('Rotating', 'Would rotate', $tmp_msg);
+                        }
+
+                        writeln($tmp_msg);
+                    }
+
+                    if (!$b_dryRun) {
+                        rename($s_fullPath . $tmp_dir, $s_fullPath . $tmp_newDir);
+                    }
+                }
+            }
+        }
+    }
+
+    // }}}
+    // {{{ perform rsync
+
+    // this dir shouldn't be here, but check anyhow to make sure we
+    // don't get recursive directories
+    if (!$b_dryRun && $tmp_max > 1 && is_dir("$s_fullPath$s_backupType.0") && !$b_dryRun) {
+        exec("$s_rm -rf $s_fullPath$s_backupType.0");
+    }
+
+    // we only rsync if the type is hourly or on the type is the one they want rsynced 
+    if ($s_backupType == 'hourly' || $s_backupType == $s_rsyncType) {
+        // make hard-link-only copy of latest directory
+        if (is_dir("$s_fullPath$s_backupType.1") && !$b_dryRun) {
+            if (!isset($a_backupHosts[$s_configName]['use_hard_links']) ||
+                $a_backupHosts[$s_configName]['use_hard_links']) {
+               exec("$s_cp -al $s_fullPath$s_backupType.1 $s_fullPath$s_backupType.0");
+            } else {
+                // When not using the hard-link method of backups we
+                // want the full backup to be in .0 and any files that have
+                // been changed to be placed in .1
+                rename("$s_fullPath$s_backupType.1", "$s_fullPath$s_backupType.0");
+                mkdir("$s_fullPath$s_backupType.1", $s_defaultDirPerms);
+            }
+        }
+
+        // directory needs to exist for dry run
+        if ($b_dryRun && !is_dir("$s_fullPath$s_backupType.0")) {
+            $b_cleanupDryRun = true;
+            mkdir("$s_fullPath$s_backupType.0");
+        }
+
+        $tmp_excludes = preg_split('/([^\\\\])\s/', $a_backupHosts[$s_configName]['excludes'], -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $exclude_args = '';
+        for ($i = 0; $i < count($tmp_excludes); $i++) {
+            $s_exclude = str_replace('\\', '', $tmp_excludes[$i]);
+            if (isset($tmp_excludes[$i + 1]) && strlen($tmp_excludes[$i + 1]) == 1) {
+                $s_exclude .= $tmp_excludes[++$i];
+            }
+
+            // check if we want to include rather than exclude
+            if (substr($s_exclude, 0, 1) == '+') {
+                $s_exclude = '+ ' . substr($s_exclude, 1);
+            }
+            // in this case we want a literal '+'
+            elseif (substr($s_exclude, 0, 2) == '\+') {
+                $s_exclude = '+' . substr($s_exclude, 2);
+            }
+
+            $exclude_args = $exclude_args . " --exclude=\"$s_exclude\"";
+        }
+
+        $tmp_rsyncArgs = $s_rsyncArgs;
+        if ($b_dryRun) {
+            $tmp_rsyncArgs .= ' -n';
+        }
+
+        // See if ribs is running on the localhost as the current user,
+        // in which case we don't use ssh, making it possible to run ribs
+        // without a password.
+        if ($a_backupHosts[$s_configName]['ip'] == 'localhost' && 
+            $a_backupHosts[$s_configName]['ssh_user'] == get_current_user()) {
+            $tmp_rsyncArgs .= ' ' . $a_backupHosts[$s_configName]['directories'];
+        }
+        else {
+            $tmp_dirs = preg_replace('/\\\\\s/', '\\\\\\\\ ', $a_backupHosts[$s_configName]['directories']);
+            $s_port = isset($a_backupHosts[$s_configName]['ssh_port']) ? 
+                $a_backupHosts[$s_configName]['ssh_port'] : 22;
+            $tmp_rsyncArgs .= " -e \"ssh -p $s_port\" ";
+            $tmp_rsyncArgs .= "\"{$a_backupHosts[$s_configName]['ssh_user']}@";
+            $tmp_rsyncArgs .= "{$a_backupHosts[$s_configName]['ip']}:";
+            $tmp_rsyncArgs .= $tmp_dirs . '"';
+        }
+
+        if (isset($a_backupHosts[$s_configName]['use_hard_links']) &&
+            !$a_backupHosts[$s_configName]['use_hard_links']) {
+            $tmp_rsyncArgs .= " --backup --backup-dir=\"$s_fullPath$s_backupType.1\"";
+        }
+ 
+        // now we do the actual rsync from the system into the latest snapshot (notice that
+        // rsync behaves like cp --remove-destination by default, so the destination
+        // is unlinked first.  If it were not so, this would copy over the other snapshot(s) too!
+        $s_args = "$exclude_args $tmp_rsyncArgs " . 
+                  "$s_fullPath$s_backupType.0 2>&1";
+        $s_cmd = $s_rsync . ' ' . $s_args;
+        if ($b_debug) {
+            writeln('Executing rsync command: ' . $s_cmd);
+        }
+
+        $s_log .= `$s_cmd`; 
+
+        if ($b_cleanupDryRun) {
+            rmdir("$s_fullPath$s_backupType.0");
+        }
+    }
+    // else we just rotate the most recent directory of the type below up to the current
+    // type.  This saves space so that there is only one "real" directory with files.  The
+    // other directories are hardlinked directories.
+    else {
+        natsort($a_dirListTypeBelow);
+        $tmp_lastDir = end($a_dirListTypeBelow);
+        if ($tmp_lastDir != '' && is_dir($s_fullPath . $tmp_lastDir)) {
+            if ($b_debug || $b_dryRun) {
+                $tmp_msg = "Performing backup by copying $s_fullPath$tmp_lastDir to $s_fullPath$s_backupType.0";
+                if ($b_dryRun) {
+                    $tmp_msg = str_replace('Performing', 'Would perform', $tmp_msg);
+                }
+
+                writeln($tmp_msg);
+            }
+            if (!$b_dryRun) {
+                exec("$s_cp -al $s_fullPath$tmp_lastDir $s_fullPath$s_backupType.0");
+            }
+
+            $s_log .= writeln("Performed $s_backupType backup by copying the last $s_typeBelow up to $s_backupType", true);
+        }
+        else {
+            $tmp_msg = writeln("WARNING: Could not perform $s_backupType backup because the $s_typeBelow type does not exist.", true, true);
+            $tmp_msg .= writeln("You must run the $s_typeBelow backup first or change what type of backup performs the actual");
+            $tmp_msg .= writeln("rsync (\$s_rsyncType is the config variable to check).", true);
+            $s_log .= $tmp_msg;
+            $b_error = true;
+            continue;
+        }
+    }
+
+    // }}}
+    // {{{ check for rsync problems
+
+    // see if there was an error
+    if (stristr($s_log, 'rsync error')) {
+        $tmp_msg = writeln("WARNING: there seems to have been an rsync error.\nCheck the logs for more information.", true, true);
+        $s_log .= $tmp_msg;
+        $b_error = true;
+        if (isset($a_backupHosts[$s_configName]['post_error_command'])) {
+           $s_cmd = replaceVars($a_backupHosts[$s_configName]['post_error_command']);
+           $s_log .= "\nPost error command: $s_cmd\n";
+           $s_log .= `($s_cmd) 2>&1`;
+        }
+    }
+    // let the snapshot reflect the current date
+    elseif (is_dir("$s_fullPath$s_backupType.0") && !$b_dryRun) {
+        touch("$s_fullPath$s_backupType.0");
+        if (($s_backupType == 'hourly' || $s_backupType == $s_rsyncType) &&
+            !is_link($s_fullPath . 'current')) {
+            symlink("$s_fullPath$s_backupType.0", $s_fullPath . 'current');
+        }
+
+        if (isset($a_backupHosts[$s_configName]['post_command'])) {
+           $s_cmd = replaceVars($a_backupHosts[$s_configName]['post_command']);
+           $s_log .= "\nPost command: $s_cmd\n";
+           $s_log .= `($s_cmd) 2>&1`;
+        }
+
+        // give some extra helpful info 
+        if ($s_extraCommands != '') {
+            $s_log .= "\nAdditional information:\n";
+            $s_cmd = replaceVars($s_extraCommands); 
+            $s_log .= `($s_cmd) 2>&1`;
+        }
+    }
+    elseif (!$b_dryRun) {
+        $tmp_msg = writeln("WARNING: it looks like the backup for config '$s_configName' was not successful.", true, true);
+        $tmp_msg .= writeln("The snapshot directory that is supposed to be created was not created:", true);
+        $tmp_msg .= writeln("$s_fullPath$s_backupType.0", true);
+        $tmp_msg .= writeln("Check the logs for more information.", true);
+        $s_log .= $tmp_msg;
+        $b_error = true;
+    }
+
+    // }}}
+}
+
+// send off the logs
+if ($b_error) {
+	mailAndLog($s_log);
+}
+else {
+	mailAndLog();
+}
+
+exit;
+
+// }}}
+// {{{ mailAndLog()
+
+/**
+ * Performs the necessary mailing and logging and exiting of the program 
+ *
+ * @param string $in_errorMessage (optional) The error message
+ *
+ * @return void
+ */
+function mailAndLog($in_errorMessage = false)
+{
+    global $a_backupHosts, $a_backupTypeSettings, $a_configNames, 
+           $s_backupType, $s_log, $s_email, $s_logFile, $s_restartBackupLog, 
+           $b_silentOnError, $b_emailOnError, $b_debug, $b_dryRun;
+
+    $s_log = "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n$s_log";
+    $s_log .= "\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n";
+    // log the message to file
+    if ($a_backupTypeSettings[$s_backupType]['log'] && $s_logFile != '') {
+        // determine file mode
+        $tmp_fileMode = $s_backupType == $s_restartBackupLog ? 'w' : 'a';
+        $fp = @fopen($s_logFile, $tmp_fileMode);
+        if ($fp) {
+            fwrite($fp, $s_log);
+            fclose($fp);
+            if ($b_debug) {
+                writeln('Successfully wrote to logfile: ' . $s_logFile);
+            }
+        }
+        else {
+            $in_errorMessage .= writeln("WARNING: Could not write to log file: $s_logFile", true, true);
+            $s_log .= $in_errorMessage;
+        }
+    }
+
+    // e-mail the log if they want it or it's an error
+    if (isset($a_backupTypeSettings[$s_backupType]) &&
+        ($a_backupTypeSettings[$s_backupType]['email'] || 
+        ($b_emailOnError && $in_errorMessage !== false)) && 
+        $s_email != '') {
+        $tmp_error = $in_errorMessage !== false ? ' (WARNING) ' : '';
+        $s_subject = "[ RIBS $tmp_error $s_backupType backups for " . implode(',', $a_configNames) . " ]";
+        if ($b_debug) {
+            writeln('Emailing backup log to: ' . $s_email);
+        }
+
+        mail($s_email, $s_subject, $s_log);
+    }
+
+    if ($in_errorMessage !== false && (!$b_silentOnError || $b_debug)) {
+        echo $in_errorMessage;
+    }
+
+    if ($b_debug || $b_dryRun) {
+        $tmp_msg = 'Dumping log for this backup:';
+        if ($b_dryRun) {
+            $tmp_msg = str_replace('Dumping log', 'What the log would be', $tmp_msg);
+        }
+
+        writeln($tmp_msg);
+        writeln($s_log);
+    }
+}
+
+// }}}
+// {{{ reInitBackups()
+
+/**
+ * Re-initialize a backup by removing the directory associated with it.
+ *
+ * @access public
+ * @return void
+ */
+function reInitBackups() 
+{
+	global $a_backupHosts, $a_configNames, $s_log, $s_destinationDir, $s_rm;
+
+	writeln('Beginning Re-initialization.');
+	foreach ($a_configNames as $s_configName) {
+        // make sure that we are using a valid configuration
+        if (!isset($a_backupHosts[$s_configName])) {
+            writeln("WARNING: The configuation: '$s_configName' is not valid, skipping it.\n", false, true);
+            continue;
+        }
+
+		$answer = '';
+        $s_fullPath = $s_destinationDir . $s_configName . '/';
+		writeln ("Are you sure you want to re-initialize $s_configName?", false, true);
+        echo 'This will completely remove it\'s backup directory and start from scratch. [y/n]: ';
+		$answer = trim(readline());
+		if ($answer == 'y' || $answer == 'Y') {
+            exec("$s_rm -rf $s_fullPath");
+            writeln('Successfully re-initialized ' . $s_configName . '.');
+            continue;
+		}
+		elseif ($answer == 'n' || $answer == 'N') {
+            writeln('Skipping re-initialization of ' . $s_configName . '.');
+            continue;
+		}
+		else {
+            writeln('Aborting re-initialization.');
+            exit;
+		}
+	}
+
+    writeln('Re-initialization complete.');
+}
+
+
+// }}}
+// {{{ showUsage()
+
+/**
+ * Shows the usage message
+ *
+ * @param string $in_file The currently running file name
+ *
+ * @access public
+ * @return void
+ */
+function showUsage($in_file)
+{
+    $s_usage =
+'RIBS version ' . RIBS_VERSION . '
+Copyright (c) 2002-2003 Jason Rust <jrust@rustyparts.com>
+
+RIBS (Rsync Incremental Backup System) is a command line PHP script 
+which will perform incremental backups to a variable number of hosts 
+(and directories on those hosts).
+
+Usage: ' . $in_file . ' [options] CONFIG_NAME BACKUP_TYPE
+
+Variables:
+    CONFIG_NAME A comma separated list of configurations to run
+                or ALL if you want to run all configurations
+    BACKUP_TYPE The type of backup to run.  Can be hourly, daily,
+                weekly, or monthly
+
+Options:
+    -h, --help      Show this help message
+    -d, --debug     Show debug information
+    -t, --test      Do a dry run.  Does not transfer any files or move
+                    any directories, just shows what would happen.
+    -r, --reinit    Re-initialize the backup.  Removes any existing
+                    backups for the specified CONFIG_NAME so that the
+                    backups are started from scratch.  WARNING: Any
+                    existing data will be erased.
+
+Report any bugs to: jrust@rustyparts.com';
+    writeln($s_usage);
+}
+
+// }}}
+// {{{ writeln()
+
+/**
+ * Writes a line to standard output
+ * 
+ * @param string $in_message The message to write.
+ * @param bool $in_return (optional) Return the message instead of echoing it?
+ * @param bool $in_pre (optional) Prepend a newline to the string?
+ * 
+ * @access public
+ * @return void
+ */
+function writeln($in_message, $in_return = false, $in_pre = false)
+{
+    if ($in_pre) {
+        $in_message = "\n" . $in_message;
+    }
+
+    $in_message = $in_message . "\n";
+    if ($in_return) {
+        return $in_message;
+    }
+    else {
+        echo $in_message;
+    }
+}
+
+// }}}
+// {{{ replaceVars()
+
+/**
+ * Replaces the placeholders %fullPath% and %backupType% with the actual
+ * value.
+ *
+ * @var string $in_cmd The command that has the placeholders
+ *
+ * @return string The command with placeholders replaced
+ */
+function replaceVars($in_cmd)
+{
+   $in_cmd = str_replace('%fullPath%', $GLOBALS['s_fullPath'], $in_cmd);
+   $in_cmd = str_replace('%backupType%', $GLOBALS['s_backupType'], $in_cmd);
+   return $in_cmd;
+}
+
+// }}}
+?>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1093"
+   name=""
+   committed-date="2004-03-12T18:23:51.732701Z"
+   url="svn://www.codejanitor.com/home/cjsvn/trunk/ribs/test%20dir"
+   last-author="jrust"
+   kind="dir"
+   uuid="050cec29-0bbb-0310-b500-ffd5b9db3264"
+   revision="1622"/>
+<entry
+   committed-rev="1092"
+   name="include.mp3"
+   text-time="2004-03-12T17:24:10.000000Z"
+   committed-date="2004-03-12T18:13:32.741088Z"
+   checksum="9bf93f8b11f4b4e95ab3398d2bdaae09"
+   last-author="jrust"
+   kind="file"/>
+<entry
+   name="my mp3"
+   kind="dir"
+   copyfrom-rev="1092"
+   copyfrom-url="svn://www.codejanitor.com/home/cjsvn/trunk/ribs/test%20dir/mp3"/>
+<entry
+   committed-rev="1092"
+   name="junk"
+   text-time="2004-03-12T17:24:10.000000Z"
+   committed-date="2004-03-12T18:13:32.741088Z"
+   checksum="e06f7ef8216f6b8fdb024d202cae3f00"
+   last-author="jrust"
+   kind="file"
+   prop-time="2004-02-16T22:51:23.000000Z"/>
+<entry
+   name="docs"
+   kind="dir"/>
+<entry
+   committed-rev="1092"
+   name="README"
+   text-time="2004-11-24T20:38:22.000000Z"
+   committed-date="2004-03-12T18:13:32.741088Z"
+   checksum="f9a7cd0fd8a028530f9326e943ae2fc7"
+   last-author="jrust"
+   kind="file"
+   prop-time="2004-02-16T22:51:23.000000Z"/>
+</wc-entries>

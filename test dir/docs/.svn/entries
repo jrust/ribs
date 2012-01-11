@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1092"
+   name=""
+   committed-date="2004-03-12T18:13:32.741088Z"
+   url="svn://www.codejanitor.com/home/cjsvn/trunk/ribs/test%20dir/docs"
+   last-author="jrust"
+   kind="dir"
+   uuid="050cec29-0bbb-0310-b500-ffd5b9db3264"
+   revision="1622"/>
+<entry
+   name="mp3"
+   kind="dir"/>
+<entry
+   committed-rev="1092"
+   name="stuff.txt"
+   text-time="2004-03-12T17:24:10.000000Z"
+   committed-date="2004-03-12T18:13:32.741088Z"
+   checksum="64a673683c8d53407e77ad62a75d911f"
+   last-author="jrust"
+   kind="file"
+   prop-time="2004-02-16T22:51:23.000000Z"/>
+<entry
+   name="junk"
+   kind="dir"/>
+</wc-entries>
