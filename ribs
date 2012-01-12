@@ -67,6 +67,7 @@ $s_destinationDir = dirname(__FILE__) . '/backups/';
  *      'ip'            => 'server ip address/FQDN',
  *      'ssh_user'      => 'the ssh user to use for rsync',
  *      'ssh_port'      => 'the ssh port (optional, defaults to 22)',
+ *      'destination'   => 'overrides the global destination directory',
  *      'directories'   => 'backup directories separated by a space WITHOUT a trailing slash (i.e. /home /root)',
  *                          If a directory has a space in it, escape it with a \
  *      'excludes'      => 'the directories to exclude separated by a space.  
@@ -310,8 +311,8 @@ if ($a_configNames[0] == 'ALL') {
 }
 
 if ($b_reinit) {
-	reInitBackups();
-	exit;
+    reInitBackups();
+    exit;
 }
 
 if (empty($options[1][1])) {
@@ -406,7 +407,16 @@ foreach ($a_configNames as $s_configName) {
         continue;
     }
 
-    $s_fullPath = $s_destinationDir . $s_configName . '/';
+    $s_backupDir = $s_destinationDir;
+    if (isset($a_backupHosts[$s_configName]['destination'])) {
+        $s_backupDir = $a_backupHosts[$s_configName]['destination'];
+        if (!is_dir($s_backupDir)) {
+            mkdir($s_backupDir, $s_defaultDirPerms);
+            $s_log .= writeln("Created destination directory: $s_backupDir", true);
+        }
+    }
+    
+    $s_fullPath = $s_backupDir . $s_configName . '/';
 
     if (!is_dir($s_fullPath)) {
         mkdir($s_fullPath, $s_defaultDirPerms);
@@ -660,10 +670,10 @@ foreach ($a_configNames as $s_configName) {
 
 // send off the logs
 if ($b_error) {
-	mailAndLog($s_log);
+    mailAndLog($s_log);
 }
 else {
-	mailAndLog();
+    mailAndLog();
 }
 
 exit;
@@ -744,35 +754,39 @@ function mailAndLog($in_errorMessage = false)
  */
 function reInitBackups() 
 {
-	global $a_backupHosts, $a_configNames, $s_log, $s_destinationDir, $s_rm;
+    global $a_backupHosts, $a_configNames, $s_log, $s_destinationDir, $s_rm;
 
-	writeln('Beginning Re-initialization.');
-	foreach ($a_configNames as $s_configName) {
+    writeln('Beginning Re-initialization.');
+    foreach ($a_configNames as $s_configName) {
         // make sure that we are using a valid configuration
         if (!isset($a_backupHosts[$s_configName])) {
             writeln("WARNING: The configuation: '$s_configName' is not valid, skipping it.\n", false, true);
             continue;
         }
 
-		$answer = '';
-        $s_fullPath = $s_destinationDir . $s_configName . '/';
-		writeln ("Are you sure you want to re-initialize $s_configName?", false, true);
+        $s_backupDir = $s_destinationDir;
+        if (isset($a_backupHosts[$s_configName]['destination'])) {
+            $s_backupDir = $a_backupHosts[$s_configName]['destination'];
+        }
+
+        $s_fullPath = $s_backupDir . $s_configName . '/';
+        writeln ("Are you sure you want to re-initialize $s_configName?", false, true);
         echo 'This will completely remove it\'s backup directory and start from scratch. [y/n]: ';
-		$answer = trim(readline());
-		if ($answer == 'y' || $answer == 'Y') {
+        $answer = trim(readline());
+        if ($answer == 'y' || $answer == 'Y') {
             exec("$s_rm -rf $s_fullPath");
             writeln('Successfully re-initialized ' . $s_configName . '.');
             continue;
-		}
-		elseif ($answer == 'n' || $answer == 'N') {
+        }
+        elseif ($answer == 'n' || $answer == 'N') {
             writeln('Skipping re-initialization of ' . $s_configName . '.');
             continue;
-		}
-		else {
+        }
+        else {
             writeln('Aborting re-initialization.');
             exit;
-		}
-	}
+        }
+    }
 
     writeln('Re-initialization complete.');
 }
