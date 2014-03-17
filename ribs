@@ -80,6 +80,8 @@ $s_destinationDir = dirname(__FILE__) . '/backups/';
  *      'post_command'  => 'A shell command to run after a successful backup.  Replaces %fullPath% 
  *                          and %backupType% with the real values.'
  *      'post_error_command' => 'Same as post_command, but run when an error occurs.'
+ *      'pre_command'   =>  Execute a shell command just before start backup.
+ *                          Is useful to execute for example a mysql backup script in the remote machine.
  *  ),
  * @type array
  */
@@ -91,6 +93,7 @@ $a_backupHosts = array(
         'directories'   => '/etc /var/lib/mysql /home',
         'excludes'      => '',
         'limits'        => array('hourly' => 24), // because this is backed up every hour
+        'pre_command'   => '/usr/bin/ssh my_host.example.com "/usr/share/init_backup.sh"',
     ),
     'small_host' => array(
         'enabled'       => false,
@@ -311,8 +314,8 @@ if ($a_configNames[0] == 'ALL') {
 }
 
 if ($b_reinit) {
-    reInitBackups();
-    exit;
+        reInitBackups();
+        exit;
 }
 
 if (empty($options[1][1])) {
@@ -415,7 +418,7 @@ foreach ($a_configNames as $s_configName) {
             $s_log .= writeln("Created destination directory: $s_backupDir", true);
         }
     }
-    
+
     $s_fullPath = $s_backupDir . $s_configName . '/';
 
     if (!is_dir($s_fullPath)) {
@@ -573,6 +576,18 @@ foreach ($a_configNames as $s_configName) {
             !$a_backupHosts[$s_configName]['use_hard_links']) {
             $tmp_rsyncArgs .= " --backup --backup-dir=\"$s_fullPath$s_backupType.1\"";
         }
+        
+
+        //pre_command execution
+        if (isset($a_backupHosts[$s_configName]['pre_command'])){
+        
+                $cmd_pre_exec = $a_backupHosts[$s_configName]['pre_command'];        
+                if ($b_debug) {
+                        writeln('Executing pre-command: ' . $cmd_pre_exec);
+                }
+                $s_log .= `$cmd_pre_exec`;
+        }
+        
  
         // now we do the actual rsync from the system into the latest snapshot (notice that
         // rsync behaves like cp --remove-destination by default, so the destination
@@ -670,10 +685,10 @@ foreach ($a_configNames as $s_configName) {
 
 // send off the logs
 if ($b_error) {
-    mailAndLog($s_log);
+        mailAndLog($s_log);
 }
 else {
-    mailAndLog();
+        mailAndLog();
 }
 
 exit;
@@ -754,10 +769,10 @@ function mailAndLog($in_errorMessage = false)
  */
 function reInitBackups() 
 {
-    global $a_backupHosts, $a_configNames, $s_log, $s_destinationDir, $s_rm;
+        global $a_backupHosts, $a_configNames, $s_log, $s_destinationDir, $s_rm;
 
-    writeln('Beginning Re-initialization.');
-    foreach ($a_configNames as $s_configName) {
+        writeln('Beginning Re-initialization.');
+        foreach ($a_configNames as $s_configName) {
         // make sure that we are using a valid configuration
         if (!isset($a_backupHosts[$s_configName])) {
             writeln("WARNING: The configuation: '$s_configName' is not valid, skipping it.\n", false, true);
@@ -770,23 +785,23 @@ function reInitBackups()
         }
 
         $s_fullPath = $s_backupDir . $s_configName . '/';
-        writeln ("Are you sure you want to re-initialize $s_configName?", false, true);
+                writeln ("Are you sure you want to re-initialize $s_configName?", false, true);
         echo 'This will completely remove it\'s backup directory and start from scratch. [y/n]: ';
-        $answer = trim(readline());
-        if ($answer == 'y' || $answer == 'Y') {
+                $answer = trim(readline());
+                if ($answer == 'y' || $answer == 'Y') {
             exec("$s_rm -rf $s_fullPath");
             writeln('Successfully re-initialized ' . $s_configName . '.');
             continue;
-        }
-        elseif ($answer == 'n' || $answer == 'N') {
+                }
+                elseif ($answer == 'n' || $answer == 'N') {
             writeln('Skipping re-initialization of ' . $s_configName . '.');
             continue;
-        }
-        else {
+                }
+                else {
             writeln('Aborting re-initialization.');
             exit;
+                }
         }
-    }
 
     writeln('Re-initialization complete.');
 }
