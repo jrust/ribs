@@ -530,24 +530,25 @@ foreach ($a_configNames as $s_configName) {
             mkdir("$s_fullPath$s_backupType.0");
         }
 
-        $tmp_excludes = preg_split('/([^\\\\])\s/', $a_backupHosts[$s_configName]['excludes'], -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
         $exclude_args = '';
-        for ($i = 0; $i < count($tmp_excludes); $i++) {
-            $s_exclude = str_replace('\\', '', $tmp_excludes[$i]);
-            if (isset($tmp_excludes[$i + 1]) && strlen($tmp_excludes[$i + 1]) == 1) {
-                $s_exclude .= $tmp_excludes[++$i];
-            }
+        if (!empty($a_backupHosts[$s_configName]['excludes'])) {
+            $tmp_excludes = preg_split('/([^\\\\])\s/', $a_backupHosts[$s_configName]['excludes'], -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+            for ($i = 0; $i < count($tmp_excludes); $i++) {
+                $s_exclude = str_replace('\\', '', $tmp_excludes[$i]);
+                if (isset($tmp_excludes[$i + 1]) && strlen($tmp_excludes[$i + 1]) == 1) {
+                    $s_exclude .= $tmp_excludes[++$i];
+                }
 
-            // check if we want to include rather than exclude
-            if (substr($s_exclude, 0, 1) == '+') {
-                $s_exclude = '+ ' . substr($s_exclude, 1);
-            }
-            // in this case we want a literal '+'
-            elseif (substr($s_exclude, 0, 2) == '\+') {
-                $s_exclude = '+' . substr($s_exclude, 2);
-            }
+                // check if we want to include rather than exclude
+                if (substr($s_exclude, 0, 1) == '+') {
+                    $s_exclude = '+ ' . substr($s_exclude, 1);
+                } // in this case we want a literal '+'
+                elseif (substr($s_exclude, 0, 2) == '\+') {
+                    $s_exclude = '+' . substr($s_exclude, 2);
+                }
 
-            $exclude_args = $exclude_args . " --exclude=\"$s_exclude\"";
+                $exclude_args = $exclude_args . " --exclude=\"$s_exclude\"";
+            }
         }
 
         $tmp_rsyncArgs = $s_rsyncArgs;
