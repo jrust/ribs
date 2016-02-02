@@ -80,8 +80,8 @@ $s_destinationDir = dirname(__FILE__) . '/backups/';
  *      'post_command'  => 'A shell command to run after a successful backup.  Replaces %fullPath% 
  *                          and %backupType% with the real values.'
  *      'post_error_command' => 'Same as post_command, but run when an error occurs.'
- *      'pre_command'   =>  Execute a shell command in the remote machine before start backup.
- *                          Useful to execute for example a remote mysql backup script.
+ *      'pre_command'   =>  Execute a shell command just before start backup.
+ *                          Is useful to execute for example a mysql backup script in the remote machine.
  *      'rsyncPreArgs'  =>  Include defined params in the beginning on the rsync command.
  *                          Useful to set the --rsync-path parameter in the remote machine.
  *  ),
