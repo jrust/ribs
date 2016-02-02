@@ -556,9 +556,9 @@ foreach ($a_configNames as $s_configName) {
         }
 
         
-        if(!empty($a_backupHosts[$s_configName]['rsyncPreArgs'])){
+        if(!empty($a_backupHosts[$s_configName]['rsyncPreArgs'])) {
             $tmp_rsyncArgs = $a_backupHosts[$s_configName]['rsyncPreArgs']. ' ' .$s_rsyncArgs;
-        }else{
+        } else {
             $tmp_rsyncArgs = $s_rsyncArgs;
         }
 
