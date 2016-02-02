@@ -3,7 +3,7 @@
 /** $Id: ribs 1625 2004-11-24 20:55:48Z jrust $ */
 // {{{ version
 
-define('RIBS_VERSION', '2.3');
+define('RIBS_VERSION', '2.4');
 
 // }}}
 // {{{ description
@@ -40,7 +40,7 @@ define('RIBS_VERSION', '2.3');
  *
  * rsync - http://samba.anu.edu.au/rsync/
  * cp & rm - http://www.gnu.org/software/fileutils/fileutils.html
- * PHP - http://www.php.net/
+ * PHP - http://www.php.net/ PHP <= 5.4
  * basic PEAR libraries (as of version 1.1) - http://pear.php.net/
  *
  * Use:
@@ -80,8 +80,10 @@ $s_destinationDir = dirname(__FILE__) . '/backups/';
  *      'post_command'  => 'A shell command to run after a successful backup.  Replaces %fullPath% 
  *                          and %backupType% with the real values.'
  *      'post_error_command' => 'Same as post_command, but run when an error occurs.'
- *      'pre_command'   =>  Execute a shell command just before start backup.
- *                          Is useful to execute for example a mysql backup script in the remote machine.
+ *      'pre_command'   =>  Execute a shell command in the remote machine before start backup.
+ *                          Useful to execute for example a remote mysql backup script.
+ *      'rsyncPreArgs'  =>  Include defined params in the beginning on the rsync command.
+ *                          Useful to set the --rsync-path parameter in the remote machine.
  *  ),
  * @type array
  */
@@ -94,6 +96,7 @@ $a_backupHosts = array(
         'excludes'      => '',
         'limits'        => array('hourly' => 24), // because this is backed up every hour
         'pre_command'   => '/usr/bin/ssh my_host.example.com "/usr/share/init_backup.sh"',
+        'rsyncPreArgs'  => '--rsync-path=/usr/syno/bin/rsync',//needed to synology
     ),
     'small_host' => array(
         'enabled'       => false,
@@ -259,6 +262,7 @@ set_time_limit(0);
 
 // we want all errors
 error_reporting(E_ALL);
+
 
 $args = Console_Getopt::readPHPArgv();
 if (PEAR::isError($args)) {
@@ -551,7 +555,13 @@ foreach ($a_configNames as $s_configName) {
             }
         }
 
-        $tmp_rsyncArgs = $s_rsyncArgs;
+        
+        if(!empty($a_backupHosts[$s_configName]['rsyncPreArgs']))
+            $tmp_rsyncArgs = $a_backupHosts[$s_configName]['rsyncPreArgs']. ' ' .$s_rsyncArgs;
+        else
+            $tmp_rsyncArgs = $s_rsyncArgs;
+
+
         if ($b_dryRun) {
             $tmp_rsyncArgs .= ' -n';
         }
